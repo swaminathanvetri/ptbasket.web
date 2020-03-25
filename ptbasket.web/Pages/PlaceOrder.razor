@@ -1,0 +1,219 @@
+﻿@page "/"
+
+@using ptbasket.models
+@using ptbasket.web.Data
+@using Radzen.Blazor
+
+@inject DialogService dialogService
+@inject OrderService orderService
+@inject NotificationService notificationService
+
+<h3>Place Your Order</h3>
+<hr />
+<br />
+<RadzenTemplateForm TItem="Order" Data="order" Style="width:100%" OnInvalidSubmit="@InvalidSubmit" Submit="@SubmitOrder">
+    <RadzenFieldset Text="Your Details">
+    <div class="row">
+        <div class="col-md-4">
+            <RadzenLabel Text="Flat Number"></RadzenLabel>
+        </div>
+        <div class="col-md-8">
+            <RadzenTextBox Name="txtFlatNumber" Placeholder="Flat Number" @bind-Value="@order.FlatNumber" Style="margin-bottom: 20px" />
+            <RadzenRequiredValidator Component="txtFlatNumber" Text="Flat Number is required" Popup="true" Style="position: absolute"></RadzenRequiredValidator>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-4">
+            <RadzenLabel Text="Mobile Number"></RadzenLabel>
+            <small style="display: block; color:darkred">(Order Updates will be sent via SMS)</small>
+        </div>
+        <div class="col-md-8">
+            <RadzenTextBox Name="txtMobileNumber" Placeholder="Mobile Number" @bind-Value="@order.MobileNumber" MaxLength="10" Style="margin-bottom: 20px" />
+            <RadzenLengthValidator Component="txtMobileNumber" Min="10" Max="10" Text="Mobile Number should be 10 digits" Popup="true" Style="position: absolute"></RadzenLengthValidator>
+        </div>
+    </div>
+    </RadzenFieldset>
+    <br />
+    <RadzenFieldset Text="Item Details">
+
+        <div class="row">
+            <div class="col-md-3">
+                <RadzenButton ButtonStyle="ButtonStyle.Info" Text="Add New" Click="@AddNewItem"></RadzenButton>
+            </div>
+            <div class="col-md-3">
+                <RadzenLabel Text="Add Items Below"></RadzenLabel>
+            </div>
+            <div class="col-md-6">
+                @if (isOrderSuccessfullyPlaced)
+                {
+                    <label>Order Placed Successfully!! </label>
+                }
+                @*@if (!isOrderSuccessfullyPlaced){
+                    <label>Error Placing Order</label>
+                }*@
+
+            </div>
+        </div>
+
+        <RadzenGrid @ref="itemsGrid" AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                    Data="@items" TItem="Item" ColumnWidth="200px">
+            <Columns>
+                <RadzenGridColumn TItem="Item" Title="Description" Property="Description">
+                    <EditTemplate Context="item">
+                        <RadzenTextBox @bind-Value="item.Description" Style="width:100%; display: block" Name="Description" />
+                    </EditTemplate>
+                </RadzenGridColumn>
+                <RadzenGridColumn TItem="Item" Title="Quantity" Property="Quantity">
+                    <EditTemplate Context="item">
+                        <RadzenNumeric @bind-Value="item.Quantity" Style="width:100%" />
+                    </EditTemplate>
+                </RadzenGridColumn>
+                <RadzenGridColumn TItem="Item" Context="Item" Bubble="false" Filterable="false" Sortable="false" TextAlign="TextAlign.Center" Width="100px" Title="Edit">
+                    <Template Context="item">
+                        <RadzenButton Icon="edit" Size="ButtonSize.Small" Click="@(args => EditRow(item))">
+                        </RadzenButton>
+                    </Template>
+                    <EditTemplate Context="item">
+                        <RadzenButton Icon="save" Size="ButtonSize.Small" Click="@((args) => SaveRow(item))">
+                        </RadzenButton>
+                        <RadzenButton Icon="cancel" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Secondary" Click="@((args) => CancelEdit(item))">
+                        </RadzenButton>
+                    </EditTemplate>
+                </RadzenGridColumn>
+                <RadzenGridColumn TItem="Item" Context="Item" Bubble="false" Filterable="false" Sortable="false" TextAlign="TextAlign.Center" Width="70px" Title="Delete">
+                    <Template Context="item">
+                        <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="close" Size="ButtonSize.Small" Click="@(args => DeleteRow(item))">
+                        </RadzenButton>
+                    </Template>
+                    <EditTemplate Context="item">
+                        <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="close" Size="ButtonSize.Small" Click="@(args => DeleteRow(item))">
+                        </RadzenButton>
+                    </EditTemplate>
+                </RadzenGridColumn>
+            </Columns>
+        </RadzenGrid>
+
+    </RadzenFieldset>
+    <br />
+    <RadzenButton Text="Place Order" ButtonType="ButtonType.Submit"></RadzenButton>
+</RadzenTemplateForm>
+
+@code {
+
+    RadzenGrid<Item> itemsGrid;
+    private Order order;
+    private List<Item> items;
+    bool isOrderSuccessfullyPlaced;
+
+    protected override async Task OnInitializedAsync()
+    {
+        items = new List<Item>();
+        items.Add(new Item { Description = "Test Item", Quantity = 1 });
+
+        order = new Order
+        {
+            //FlatNumber = "17118",
+            Items = items
+        };
+
+        dialogService.OnOpen += Open;
+        dialogService.OnClose += Close;
+    }
+
+    void Open(string title, Type type, Dictionary<string, object> parameters, DialogOptions options)
+    {
+        StateHasChanged();
+    }
+
+    void Close(dynamic result)
+    {
+        if (result is true)
+        {
+            order.CreatedDateTime = DateTime.Now;
+            order.MobileNumber = "9632598325";
+            order.Status = OrderStatus.Created;
+
+            //orderService.SubmitOrder(order);
+        }
+        else
+        {
+            //do nothing
+        }
+        StateHasChanged();
+    }
+
+    private void EditRow(Item item)
+    {
+        itemsGrid.EditRow(item);
+    }
+
+    private void SaveRow(Item item)
+    {
+        itemsGrid.UpdateRow(item);
+    }
+
+    private void CancelEdit(Item item)
+    {
+        itemsGrid.CancelEditRow(item);
+    }
+
+    private void DeleteRow(Item item)
+    {
+        items.Remove(item);
+    }
+
+    private void AddNewItem()
+    {
+        items.Add(new Item());
+    }
+
+    private void SubmitOrder()
+    {
+        order.CreatedDateTime = DateTime.Now;
+        
+        order.Status = OrderStatus.Created;
+
+        var orderId = orderService.SubmitOrder(order).Result;
+
+        if(!string.IsNullOrEmpty(orderId))
+        {
+            notificationService.Notify(new NotificationMessage()
+            {
+                Summary = "Order Placed Successfully",
+                Detail = $"Order ID :  {orderId}",
+                Severity = NotificationSeverity.Success,
+                Duration = 5000
+            });
+            isOrderSuccessfullyPlaced = true;
+            order = new Order();
+        }
+        else
+        {
+            notificationService.Notify(new NotificationMessage()
+            {
+                Summary = "Error in Placing Order",
+                Severity = NotificationSeverity.Error,
+                Duration = 5000
+            });
+        }
+    }
+
+    private void InvalidSubmit()
+    {
+        // log the errors
+    }
+
+    async Task ShowOrderConfirmationDialog()
+    {
+        await dialogService.OpenAsync("Submit Order", ds =>
+    @<RadzenCard Style="padding: 20px;">
+        <p Style="margin-bottom: 10px;">Are you sure to submit your order ?</p>
+        <div class="row">
+            <div class="col-md-12">
+                <RadzenButton Text="Ok" Click="() => ds.Close(true)" Style="margin-bottom: 10px; width: 150px" />
+                <RadzenButton Text="Cancel" Click="() => ds.Close(false)" ButtonStyle="ButtonStyle.Secondary" Style="margin-bottom: 10px; width: 150px" />
+            </div>
+        </div>
+    </RadzenCard>);
+}
+}

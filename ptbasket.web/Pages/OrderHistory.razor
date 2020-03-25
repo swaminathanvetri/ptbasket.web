@@ -1,0 +1,59 @@
+﻿@page "/orderhistory"
+
+@using ptbasket.models
+@using ptbasket.web.Data
+@using Radzen.Blazor
+
+@inject OrderService orderService
+
+<h3>OrderHistory</h3>
+
+<RadzenGrid @ref="ordersGrid" AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+            Data="@orders" TItem="Order" ColumnWidth="200px" AllowSorting="true" PageSize="10" AllowPaging="true">
+    <Columns>
+        <RadzenGridColumn TItem="Order" Title="Order Id" Property="Id"></RadzenGridColumn>
+        <RadzenGridColumn TItem="Order" Title="Customer Id" Property="FlatNumber"></RadzenGridColumn>
+        <RadzenGridColumn TItem="Order" Title="Order Status" Property="Status">
+            <Template Context="order">
+            @if (order.Status == OrderStatus.PickedUp)
+            {
+                <p style="background-color: green; padding: 5px;color: white">@order.Status</p>
+            }
+            @if (order.Status == OrderStatus.ReadyToPickUp)
+            {
+                <p style="background-color: orange; padding: 5px">@order.Status</p>
+            }
+            @if (order.Status == OrderStatus.Created)
+            {
+                <p style="background-color: yellow; padding: 5px">@order.Status</p>
+            }
+            @if (order.Status == OrderStatus.Cancelled)
+            {
+                <p style="background-color: red; padding: 5px; color: white">@order.Status</p>
+            }
+        </Template>
+        </RadzenGridColumn>
+        <RadzenGridColumn TItem="Order" Title="Order Creation Time" Property="CreatedDateTime"></RadzenGridColumn>
+        <RadzenGridColumn TItem="Order" Title="Last Updated" Property="UpdatedTime"></RadzenGridColumn>
+        <RadzenGridColumn TItem="Order" Title="PickUp Time" Property="PickUpTime"></RadzenGridColumn>
+        <RadzenGridColumn TItem="Order" Title="Total Amount" Property="TotalAmount"></RadzenGridColumn>
+    </Columns>
+</RadzenGrid>
+
+@code{
+
+    RadzenGrid<Order> ordersGrid;
+
+    private List<Order> orders;
+    protected override async Task OnInitializedAsync()
+    {
+        //orders = await orderService.GetMyOrders();
+        orders = new List<Order>
+    {
+            new Order { Id="1", FlatNumber="17118", MobileNumber="9632598325", Status = OrderStatus.Created, CreatedDateTime = DateTime.Now, UpdatedTime = DateTime.Now},
+            new Order { Id="2", FlatNumber="17118", MobileNumber="9632598325", Status = OrderStatus.Cancelled, CreatedDateTime = DateTime.Now.AddDays(-2), UpdatedTime = DateTime.Now.AddDays(-1)},
+            new Order { Id="3", FlatNumber="17118", MobileNumber="9632598325", Status = OrderStatus.PickedUp, CreatedDateTime = DateTime.Now.AddDays(-3), UpdatedTime = DateTime.Now.AddDays(-2)},
+            new Order { Id="4", FlatNumber="17118", MobileNumber="9632598325", Status = OrderStatus.ReadyToPickUp, CreatedDateTime = DateTime.Now, UpdatedTime = DateTime.Now, PickUpTime=DateTime.Now.AddHours(2)}
+        };
+    }
+}

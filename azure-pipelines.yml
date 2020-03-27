@@ -1,5 +1,6 @@
 # ASP.NET Core
 
+
 # Build and test ASP.NET Core projects targeting .NET Core.
 # Add steps that run tests, create a NuGet package, deploy, and more:
 # https://docs.microsoft.com/azure/devops/pipelines/languages/dotnet-core
@@ -15,13 +16,20 @@ variables:
 
 steps:
 - task: DotNetCoreCLI@2
+  displayName: 'dotnet build'
   inputs:
     command: 'build'
     projects: '**/*.csproj'
+    arguments: '-c Release'
 - task: DotNetCoreCLI@2
+  displayName: 'dotnet publish'
   inputs:
-    command: 'publish'
-    arguments: '''--configuration $(BuildConfiguration) --output $(Build.ArtifactStagingDirectory)'''
+    command: publish
+    publishWebProjects: false
+    projects: '**/*.csproj'
+    arguments: '-c Release -o $(Build.ArtifactStagingDirectory)'
+    zipAfterPublish: true
+    modifyOutputPath: true
 - task: PublishBuildArtifacts@1
   inputs:
     PathtoPublish: '$(Build.ArtifactStagingDirectory)'

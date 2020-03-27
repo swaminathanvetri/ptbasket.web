@@ -17,11 +17,11 @@ steps:
 - task: DotNetCoreCLI@2
   inputs:
     command: 'build'
-    arguments: '''--configuration ${buildConfiguration}'''
+    arguments: '''--configuration ${BuildConfiguration}'''
 - task: DotNetCoreCLI@2
   inputs:
     command: 'publish'
-    arguments: '''--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)'''
+    arguments: '''--configuration $(BuildConfiguration) --output $(Build.ArtifactStagingDirectory)'''
 - task: PublishBuildArtifacts@1
   inputs:
     PathtoPublish: '$(Build.ArtifactStagingDirectory)'

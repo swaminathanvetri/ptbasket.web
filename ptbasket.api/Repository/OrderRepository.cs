@@ -1,13 +1,27 @@
-﻿using ptbasket.models;
+﻿using Microsoft.Extensions.Configuration;
+using ptbasket.models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Azure.Cosmos;
+using Microsoft.Azure.Cosmos.Table;
 
 namespace ptbasket.api.Repository
 {
     public class OrderRepository : IOrderRepository
     {
+
+        IConfiguration configuration;
+        bool IsPersistenceEnabled = false;
+        string storageConnectionString;
+        public OrderRepository(IConfiguration _configuration)
+        {
+            configuration = _configuration;
+            bool.TryParse(configuration.GetValue<string>("UsePersistence"),out IsPersistenceEnabled);
+            storageConnectionString = configuration.GetValue<string>("StorageConnectionString");
+        }
+
         List<Order> orders = new List<Order>();
         Random random = new Random();
         public string Create(Order newOrder)
@@ -18,6 +32,24 @@ namespace ptbasket.api.Repository
             {
                 newOrder.Id = string.Concat(newOrder.FlatNumber,random.Next(1, 10000));
                 orders.Add(newOrder);
+                try
+                {
+                    if(IsPersistenceEnabled)
+                    {
+                        CloudStorageAccount storageAccount = CloudStorageAccount.Parse(storageConnectionString);
+                        if(storageAccount!=null)
+                        {
+                            CloudTableClient cloudTableClient = storageAccount.CreateCloudTableClient(new TableClientConfiguration());
+                        }
+                    }
+
+                }
+                catch (Exception)
+                {
+
+                    throw;
+                }
+
                 return newOrder.Id;
             }
             else

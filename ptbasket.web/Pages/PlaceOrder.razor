@@ -37,25 +37,38 @@
     <RadzenFieldset Text="Item Details">
 
         <div class="row">
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <RadzenTextBox Name="txtItemDescription" @bind-Value="@newItemDescription" Placeholder="Item Description - Item Unit (Milk - 500ml)" Style="width:100%"></RadzenTextBox>
             </div>
-            <div class="col-md-4">
-                <RadzenNumeric @bind-Value="@newItemQuantity" Placeholder="Item Quantity" ></RadzenNumeric>
-                <small style="display: block; color:darkred">(If not mentioned, default will be 1)</small>
+            <div class="col-md-3">
+                <RadzenRadioButtonList @bind-Value="unitOfMeasure" TValue="int" >
+                    <Items>
+                        <RadzenRadioButtonListItem Text="250 (g/ml)" Value="250" />
+                        <RadzenRadioButtonListItem Text="500 (g/ml)" Value="500" />
+                        <RadzenRadioButtonListItem Text="1 (kg/l)" Value="1" />
+                    </Items>
+                </RadzenRadioButtonList>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
+                <RadzenNumeric @bind-Value="@newItemQuantity" Placeholder="Item Quantity" ></RadzenNumeric>
+            </div>
+            <div class="col-md-3">
                 <RadzenButton ButtonStyle="ButtonStyle.Info" Text="Add Item" Click="@AddNewItem"></RadzenButton>
             </div>
         </div>
         <br />
 
         <RadzenGrid @ref="itemsGrid" AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
-                    Data="@items" TItem="Item" ColumnWidth="200px">
+                    Data="@order.Items" TItem="Item" ColumnWidth="200px">
             <Columns>
                 <RadzenGridColumn TItem="Item" Title="Description" Property="Description">
                     <EditTemplate Context="item">
                         <RadzenTextBox @bind-Value="item.Description" Style="width:100%; display: block" Name="Description" />
+                    </EditTemplate>
+                </RadzenGridColumn>
+                <RadzenGridColumn TItem="Item" Title="Unit of Measure (g/ml)" Property="UnitOfMeasure">
+                    <EditTemplate Context="item">
+                        <RadzenDropDown Placeholder="Select Unit of Measure" @bind-Value="item.UnitOfMeasure" TValue="string" Data="@UnitOfMeasures" TextProperty="unitOfMeasure" ValueProperty="unitOfMeasure" Style="width:100%" />
                     </EditTemplate>
                 </RadzenGridColumn>
                 <RadzenGridColumn TItem="Item" Title="Quantity" Property="Quantity">
@@ -65,23 +78,23 @@
                 </RadzenGridColumn>
                 <RadzenGridColumn TItem="Item" Context="Item" Bubble="false" Filterable="false" Sortable="false" TextAlign="TextAlign.Center" Width="100px" Title="Edit">
                     <Template Context="item">
-                        <RadzenButton Icon="edit" Size="ButtonSize.Small" Click="@(args => EditRow(item))">
+                        <RadzenButton Icon="edit" Size="ButtonSize.Medium" Click="@(args => EditRow(item))">
                         </RadzenButton>
                     </Template>
                     <EditTemplate Context="item">
-                        <RadzenButton Icon="save" Size="ButtonSize.Small" Click="@((args) => SaveRow(item))">
+                        <RadzenButton Icon="save" Size="ButtonSize.Medium" Click="@((args) => SaveRow(item))">
                         </RadzenButton>
-                        <RadzenButton Icon="cancel" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Secondary" Click="@((args) => CancelEdit(item))">
+                        <RadzenButton Icon="cancel" Size="ButtonSize.Medium" ButtonStyle="ButtonStyle.Secondary" Click="@((args) => CancelEdit(item))">
                         </RadzenButton>
                     </EditTemplate>
                 </RadzenGridColumn>
                 <RadzenGridColumn TItem="Item" Context="Item" Bubble="false" Filterable="false" Sortable="false" TextAlign="TextAlign.Center" Width="70px" Title="Delete">
                     <Template Context="item">
-                        <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="close" Size="ButtonSize.Small" Click="@(args => DeleteRow(item))">
+                        <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="close" Size="ButtonSize.Medium" Click="@(args => DeleteRow(item))">
                         </RadzenButton>
                     </Template>
                     <EditTemplate Context="item">
-                        <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="close" Size="ButtonSize.Small" Click="@(args => DeleteRow(item))">
+                        <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="close" Size="ButtonSize.Medium" Click="@(args => DeleteRow(item))">
                         </RadzenButton>
                     </EditTemplate>
                 </RadzenGridColumn>
@@ -100,8 +113,9 @@
     private List<Item> items;
     bool isOrderSuccessfullyPlaced;
     string newItemDescription;
-    int newItemQuantity;
-
+    int newItemQuantity=1;
+    int unitOfMeasure;
+    private List<string> UnitOfMeasures;
     protected override async Task OnInitializedAsync()
     {
         items = new List<Item>();
@@ -109,6 +123,13 @@
         order = new Order
         {
             Items = items
+        };
+
+        UnitOfMeasures = new List<string>
+        {
+            "250 (g/ml)",
+            "500 (g/ml",
+            "1 (kg/l)"
         };
 
         dialogService.OnOpen += Open;
@@ -159,10 +180,11 @@
             items.Add(new Item
             {
                 Description = newItemDescription,
-                Quantity = newItemQuantity == 0 ? 1 : newItemQuantity
+                Quantity = newItemQuantity,
+                UnitOfMeasure=unitOfMeasure.ToString()
             });
         newItemDescription = string.Empty;
-        newItemQuantity = 0;
+        newItemQuantity = 1;
     }
 
     private void SubmitOrder()

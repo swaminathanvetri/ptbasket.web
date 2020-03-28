@@ -27,6 +27,7 @@ namespace ptbasket.models
     public class Item
     {
         public string Description { get; set; }
+        public string UnitOfMeasure { get; set; }
         public int Quantity { get; set; }
     }
 }

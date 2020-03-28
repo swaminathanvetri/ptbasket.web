@@ -9,93 +9,134 @@
 <h3>UpdateOrder</h3>
 <hr />
 <br />
-@if(orders == null)
+
+@if(activeOrders == null)
 {
     <h2>Loading ... </h2>
 }
 
-@if (orders!=null && orders.Count > 0)
-{
-    <RadzenGrid @ref="ordersGrid" AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
-            Data="@orders" TItem="Order" ColumnWidth="200px" AllowSorting="true" PageSize="10" AllowPaging="true" >
-    <Columns>
-        <RadzenGridColumn TItem="Order" Title="Order Id" Property="Id"></RadzenGridColumn>
-        <RadzenGridColumn TItem="Order" Title="Customer Id" Property="FlatNumber"></RadzenGridColumn>
-        <RadzenGridColumn TItem="Order" Title="Order Status" Property="Status">
-            <Template Context="order">
-                @if (order.Status == OrderStatus.ReadyToPickUp)
-                {
-                    <p style="background-color: orange; padding: 5px">@order.Status</p>
-                }
-                @if (order.Status == OrderStatus.Created)
-                {
-                    <p style="background-color: yellow; padding: 5px">@order.Status</p>
-                }
-                @if (order.Status == OrderStatus.PickedUp)
-                {
-                    <p style="background-color: green; padding: 5px;color: white">@order.Status</p>
-                }
-            </Template>
-            <EditTemplate Context="order">
-                <RadzenDropDown TValue="string" Change="@(args => StatusChanged(args, order))" Data="@statuses" TextProperty="status" ValueProperty="status" Style="width:100%" />
-            </EditTemplate>
-        </RadzenGridColumn>
-        <RadzenGridColumn TItem="Order" Title="Order Creation Time" Property="CreatedDateTime"></RadzenGridColumn>
-        <RadzenGridColumn TItem="Order" Title="PickUp Time" Property="PickUpTime">
-            <EditTemplate Context="order">
-                <RadzenDatePicker @bind-Value="order.PickUpTime" Style="width:100%" HourFormat="12" ShowTime="true" ShowTimeOkButton="true" ></RadzenDatePicker>
-            </EditTemplate>
-        </RadzenGridColumn>
-        <RadzenGridColumn TItem="Order" Title="Total Amount" Property="TotalAmount">
-            <EditTemplate Context="order">
-                <RadzenTextBox Change="@(args => TotalChanged(args, order))"></RadzenTextBox>
-            </EditTemplate>
-        </RadzenGridColumn>
-        
-        <RadzenGridColumn TItem="Order" Context="Item" Bubble="false" Filterable="false" Sortable="false" TextAlign="TextAlign.Center" Width="100px" Title="Edit">
-            <Template Context="order">
-                <RadzenButton Icon="edit" Size="ButtonSize.Small" Click="@(args => EditRow(order))">
-                </RadzenButton>
-            </Template>
-            <EditTemplate Context="order">
-                <RadzenButton Icon="save" Size="ButtonSize.Small" Click="@((args) => SaveRow(order))">
-                </RadzenButton>
-                <RadzenButton Icon="cancel" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Secondary" Click="@((args) => CancelEdit(order))">
-                </RadzenButton>
-            </EditTemplate>
-        </RadzenGridColumn>
-    </Columns>
-</RadzenGrid>
-<br />
-<RadzenButton Text="Update and Notify Customers" Click="@NotifyCustomers"></RadzenButton>
-}
-else
-{
-    <h2> No Outstanding Orders ... </h2>
-}
+<RadzenTabs>
+    <Tabs>
+        <RadzenTabsItem Text="Active Orders">
+            @if (activeOrders != null && activeOrders.Count > 0)
+            {
+                <RadzenGrid @ref="ordersGrid" AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                            Data="@activeOrders" TItem="Order" ColumnWidth="200px" AllowSorting="true" PageSize="10" AllowPaging="true">
+                    <Columns>
+                        <RadzenGridColumn TItem="Order" Title="Order Id" Property="Id"></RadzenGridColumn>
+                        <RadzenGridColumn TItem="Order" Title="Customer Id" Property="FlatNumber"></RadzenGridColumn>
+                        <RadzenGridColumn TItem="Order" Title="Order Status" Property="Status">
+                            <Template Context="order">
+                                @if (order.Status == OrderStatus.ReadyToPickUp)
+                                {
+                                    <p style="background-color: orange; padding: 5px">@order.Status</p>
+                                }
+                                @if (order.Status == OrderStatus.Created)
+                                {
+                                    <p style="background-color: yellow; padding: 5px">@order.Status</p>
+                                }
+                                @if (order.Status == OrderStatus.PickedUp)
+                                {
+                                    <p style="background-color: green; padding: 5px;color: white">@order.Status</p>
+                                }
+                            </Template>
+                            <EditTemplate Context="order">
+                                <RadzenDropDown Placeholder="Select Order Status" TValue="string" Change="@(args => StatusChanged(args, order))" Data="@statuses" TextProperty="status" ValueProperty="status" Style="width:100%" />
+                            </EditTemplate>
+                        </RadzenGridColumn>
+                        <RadzenGridColumn TItem="Order" Title="Order Creation Time" Property="CreatedDateTime"></RadzenGridColumn>
+                        <RadzenGridColumn TItem="Order" Title="PickUp Time" Property="PickUpTime">
+                            <EditTemplate Context="order">
+                                <RadzenDatePicker Placeholder="Select PickUp DateTime" @bind-Value="order.PickUpTime" Style="width:100%" HourFormat="12" ShowTime="true" ShowTimeOkButton="true"></RadzenDatePicker>
+                            </EditTemplate>
+                        </RadzenGridColumn>
+                        <RadzenGridColumn TItem="Order" Title="Total Amount" Property="TotalAmount">
+                            <EditTemplate Context="order">
+                                <RadzenTextBox Placeholder="Enter Total Amount" Change="@(args => TotalChanged(args, order))"></RadzenTextBox>
+                            </EditTemplate>
+                        </RadzenGridColumn>
+
+                        <RadzenGridColumn TItem="Order" Context="Item" Bubble="false" Filterable="false" Sortable="false" TextAlign="TextAlign.Center" Width="100px" Title="Edit">
+                            <Template Context="order">
+                                <RadzenButton Icon="edit" Size="ButtonSize.Medium" Click="@(args => EditRow(order))">
+                                </RadzenButton>
+                            </Template>
+                            <EditTemplate Context="order">
+                                <RadzenButton Icon="save" Size="ButtonSize.Medium" Click="@((args) => SaveRow(order))">
+                                </RadzenButton>
+                                <RadzenButton Icon="cancel" Size="ButtonSize.Medium" ButtonStyle="ButtonStyle.Secondary" Click="@((args) => CancelEdit(order))">
+                                </RadzenButton>
+                            </EditTemplate>
+                        </RadzenGridColumn>
+                    </Columns>
+                </RadzenGrid>
+                <br />
+                @*<RadzenButton Text="Update and Notify Customers" Click="@NotifyCustomers"></RadzenButton>*@
+            }
+            else
+            {
+                <h2> No Outstanding Orders ... </h2>
+            }
+        </RadzenTabsItem>
+        <RadzenTabsItem Text="Processed Orders">
+            @if (processedOrders != null && processedOrders.Count > 0)
+            {
+                <RadzenGrid @ref="processedOrdersGrid" AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                            Data="@processedOrders" TItem="Order" ColumnWidth="200px" AllowSorting="true" PageSize="10" AllowPaging="true">
+                    <Columns>
+                        <RadzenGridColumn TItem="Order" Title="Order Id" Property="Id"></RadzenGridColumn>
+                        <RadzenGridColumn TItem="Order" Title="Customer Id" Property="FlatNumber"></RadzenGridColumn>
+                        <RadzenGridColumn TItem="Order" Title="Order Status" Property="Status">
+                            <Template Context="order">
+                                @if (order.Status == OrderStatus.ReadyToPickUp)
+                                {
+                                    <p style="background-color: orange; padding: 5px">@order.Status</p>
+                                }
+                                @if (order.Status == OrderStatus.Created)
+                                {
+                                    <p style="background-color: yellow; padding: 5px">@order.Status</p>
+                                }
+                                @if (order.Status == OrderStatus.PickedUp)
+                                {
+                                    <p style="background-color: green; padding: 5px;color: white">@order.Status</p>
+                                }
+                                @if (order.Status == OrderStatus.Cancelled)
+                                {
+                                    <p style="background-color: darkred; padding: 5px;color: white">@order.Status</p>
+                                }
+                            </Template>
+                        </RadzenGridColumn>
+                        <RadzenGridColumn TItem="Order" Title="Order Creation Time" Property="CreatedDateTime"></RadzenGridColumn>
+                        <RadzenGridColumn TItem="Order" Title="PickUp Time" Property="PickUpTime"></RadzenGridColumn>
+                        <RadzenGridColumn TItem="Order" Title="Total Amount" Property="TotalAmount"></RadzenGridColumn>
+                    </Columns>
+                </RadzenGrid>
+            }
+        </RadzenTabsItem>
+    </Tabs>
+</RadzenTabs>
+
 @code {
 
     RadzenGrid<Order> ordersGrid;
+    RadzenGrid<Order> processedOrdersGrid;
 
-    private List<Order> orders;
+    private List<Order> activeOrders;
+    private List<Order> processedOrders;
     private List<string> statuses;
 
     protected override async Task OnInitializedAsync()
     {
-        orders = await orderService.GetMyOrders();
-        
-        //Filter the orders that are cancelled/pickedup already
+        var allOrders = await orderService.GetMyOrders();
 
-        //orders = new List<Order>
-        //{
-        //    new Order { Id="1", FlatNumber="17118", MobileNumber="9632598325", Status = OrderStatus.Created, CreatedDateTime = DateTime.Now, UpdatedTime = DateTime.Now},
-        //    new Order { Id="4", FlatNumber="17118", MobileNumber="9632598325", Status = OrderStatus.ReadyToPickUp, CreatedDateTime = DateTime.Now, UpdatedTime = DateTime.Now, PickUpTime=DateTime.Now.AddHours(2)}
-        //};
+        activeOrders = allOrders.Where(order => order.Status == OrderStatus.Created || order.Status == OrderStatus.ReadyToPickUp).ToList();
+        processedOrders = allOrders.Where(order => order.Status == OrderStatus.PickedUp || order.Status == OrderStatus.Cancelled).ToList();
 
         statuses = new List<string>
         {
             OrderStatus.ReadyToPickUp.ToString(),
-            OrderStatus.PickedUp.ToString()
+            OrderStatus.PickedUp.ToString(),
+            OrderStatus.Cancelled.ToString()
         };
     }
     private void EditRow(Order order)
@@ -107,6 +148,16 @@ else
     {
         ordersGrid.UpdateRow(order);
         var isUpdateSuccesful = orderService.UpdateOrderStatus(order).Result;
+        if(isUpdateSuccesful)
+        {
+            if(order.Status == OrderStatus.Cancelled || order.Status == OrderStatus.PickedUp)
+            {
+                AddToProcessedOrders(order);
+                FilterActiveOrders();
+                ordersGrid.Reload();
+                processedOrdersGrid.Reload();
+            }
+        }
     }
 
     private void CancelEdit(Order order)
@@ -132,4 +183,15 @@ else
             order.TotalAmount = amount;
         }
     }
+
+    private void FilterActiveOrders()
+    {
+        activeOrders.RemoveAll(order => order.Status == OrderStatus.PickedUp || order.Status == OrderStatus.Cancelled);
+    }
+
+    private void AddToProcessedOrders(Order order)
+    {
+        processedOrders.Add(order);
+    }
+
 }

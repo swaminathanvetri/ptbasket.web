@@ -13,12 +13,12 @@ namespace ptbasket.api.Repository
     {
 
         IConfiguration configuration;
-        bool IsPersistenceEnabled = false;
+        bool IsDemoMode = false;
         string storageConnectionString;
         public OrderRepository(IConfiguration _configuration)
         {
             configuration = _configuration;
-            bool.TryParse(configuration.GetValue<string>("UsePersistence"),out IsPersistenceEnabled);
+            bool.TryParse(configuration.GetValue<string>("IsDemoMode"),out IsDemoMode);
             storageConnectionString = configuration.GetValue<string>("StorageConnectionString");
         }
 
@@ -34,13 +34,11 @@ namespace ptbasket.api.Repository
                 orders.Add(newOrder);
                 try
                 {
-                    if(IsPersistenceEnabled)
+                    if(!IsDemoMode)
                     {
-                        CloudStorageAccount storageAccount = CloudStorageAccount.Parse(storageConnectionString);
-                        if(storageAccount!=null)
-                        {
-                            CloudTableClient cloudTableClient = storageAccount.CreateCloudTableClient(new TableClientConfiguration());
-                        }
+                        CloudStorageAccount storageAccount = Common.CreateStorageAccountFromConnectionString(storageConnectionString);
+                        
+                        
                     }
 
                 }

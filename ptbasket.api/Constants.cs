@@ -10,5 +10,7 @@ namespace ptbasket.api
         public static string OrderAlreadyInProgress = "OrderAlreadyInProgress";
         public static string AdminUser = "admin";
         public static string UserIdKey = "x-user-id";
+
+        public static string PtOrders { get; internal set; }
     }
 }
